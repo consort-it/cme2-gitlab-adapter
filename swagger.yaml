@@ -1,0 +1,230 @@
+swagger: '2.0'
+info:
+  description: "This is the gitlab adapter service of consort-group. It gets files from gitlab and returns them when api request are made."
+  version: "1.0.0"
+  title: "Gitlab Adapter"
+  contact:
+    email: "paul.krugel@consort-group.com"
+basePath: "/api/v1/gitlab-adapter"
+schemes:
+- http
+paths:
+  /{microservice-name}/content-as-string/{filepath}:
+    get:
+      tags:
+      - "GitLabBackend"
+      summary: "Get the raw content of the specified file"
+      description: "Querying this path the service returns the raw file defined by the filepath. If the file is found on many servers, then an array of raw files is returned."
+      operationId: "getFileAsString"
+      produces:
+      - "text/plain"
+      parameters:
+      - name: "microservice-name"
+        in: "path"
+        description: "The name of the project/microservice for which to get the file"
+        required: true
+        type: "string"
+      - name: "filepath"
+        in: "path"
+        description: "Defines which file to get. Whole path is necessary if file is inside directories."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Status 200. Everything went fine. Get was successful"
+          schema:
+            type: string
+        400:
+          description: "Something was wrong with the client request."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        403:
+          description: "The request did not contain a valid authentication header."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Something bad happened on the server."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /{microservice-name}/content-as-raw/{filepath}:
+    get:
+      tags:
+      - "GitLabBackend"
+      summary: "Get the raw content of the specified file"
+      description: "Querying this path the service returns the raw file defined by the filepath."
+      operationId: "getFileAsRaw"
+      produces:
+      - "*/*"
+      parameters:
+      - name: "microservice-name"
+        in: "path"
+        description: "The name of the project/microservice for which to get the file"
+        required: true
+        type: "string"
+      - name: "filepath"
+        in: "path"
+        description: "Defines which file to get. Whole path is necessary if file is inside directories."
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Status 200. Everything went fine. Get was successful"
+          schema:
+            type: file
+        400:
+          description: "Something was wrong with the client request."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        403:
+          description: "The request did not contain a valid authentication header."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Something bad happened on the server."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /{microservice-name}/metadata:
+    get:
+      tags:
+      - "GitLabBackend"
+      summary: "Get the metadata about the last commits (default: 5 commits)"
+      description: "Returns the metadata for the specified repository."
+      operationId: "getMetadata"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "microservice-name"
+        in: "path"
+        description: "The name of the project/microservice for which to get the file"
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "Limit the number of returned commits (default: 5)"
+        type: integer
+        required: false
+      responses:
+        200:
+          description: "Status 200. Everything went fine. Get was successful"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CommitMetadata"
+        400:
+          description: "Something was wrong with the client request."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        403:
+          description: "The request did not contain a valid authentication header."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Something bad happened on the server."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /{microservice-name}/metadata/{filepath}:
+    get:
+      tags:
+      - "GitLabBackend"
+      summary: "Get the metadata about the last 5 commits for the specified file"
+      description: "Returns the metadata for the specified file. The metadata contains information from the last commit made to this file."
+      operationId: "getMetadataForFile"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "microservice-name"
+        in: "path"
+        description: "The name of the project/microservice for which to get the file"
+        required: true
+        type: "string"
+      - name: "filepath"
+        in: "path"
+        description: "Defines which file to get. Whole path is necessary if file is inside directories."
+        required: true
+        type: "string"
+      - name: "limit"
+        in: "query"
+        description: "Limit the number of commits returned (default: 5)"
+        type: integer
+        required: false
+      responses:
+        200:
+          description: "Status 200. Everything went fine. Get was successful"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CommitMetadata"
+        400:
+          description: "Something was wrong with the client request."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        403:
+          description: "The request did not contain a valid authentication header."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Something bad happened on the server."
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+definitions:
+    CommitMetadata:
+      description: "Commit Metadata of a given object"
+      type: object
+      required:
+        - id
+        - shortId
+        - title
+        - createdAt
+        - parentIds
+        - message
+        - authorName
+        - authorEmail
+        - authoredDate
+        - committerName
+        - committerEmail
+        - committerDate
+      properties:
+        id:
+          type: string
+        shortId:
+          type: string
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        parentIds:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+        authorName:
+          type: string
+        authorEmail:
+          type: string
+        authoredDate:
+          type: string
+          format: date-time
+        committerName:
+          type: string
+        committerEmail:
+          type: string
+        committerDate:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          pattern: '^GIT-\d+$'
+          description: "This error code should have the format 'GIT-XXX' where XXX is an integer. It is used to uniquely distinguish different error cases in order to display a suitable and translatable error message on the UI."
+          example: "GIT-1234"
+        message:
+          type: string
+          description: "Should contain a short, meaningful description of the error case. Might be displayed to the end user."
+          example: "Could not create service 'some-name' because this service already exists."
